@@ -86,8 +86,39 @@ class TwittCollector:
 
         for twitt in getter:
             self.write(twitt)
-        
+    
+def validate(fpath):
+    """Validate parsed data. Each entry must be unique.
+
+    However it may be not the case due to the userland data. For example
+    Donald Trump has 7 tweets with 'MAKE AMERICA GREAT AGAIN!' content,
+    in last 3200 tweets, but normaly people rarely repeat the same thing
+    over and over again.
+    
+    Arguments:
+        fpath {str} -- path of a file with parsed data
+    
+    Returns:
+        [list[str]] -- list of tweets which aren't consistent
+    """
+    with open(fpath, 'r') as f:
+        data = f.read()
+    
+    data = data.split('\n')
+    tweets = set()
+    inconsistency = []
+    
+    for tweet in data:
+        if tweet in tweets:
+            inconsistency.append(tweet)
+        else:
+            tweets.add(tweet)
+
+    return inconsistency
 
 if __name__ == '__main__':
-    tc = TwittCollector(get_twitter_keys())
-    tc.collect('realDonaldTrump', 3200)
+    # tc = TwittCollector(get_twitter_keys())
+    # tc.collect('realDonaldTrump', 3200)
+    inc = validate('data_1515521742.csv')
+    if inc:
+        print(inc)
