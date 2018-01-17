@@ -12,20 +12,40 @@
 # GET
 # /api/v1/trump
 #
+#
+# Pavel Bazin 2018
 
 from random_process import MarkovChain, parse_user_input
-from flask import Flask
+from flask import Flask, url_for
 
 app = Flask(__name__)
 markov_chain = MarkovChain('./data/data_1515521742.csv')
 
 
-@app.route("/api/v1/trump/<string:umsg>", methods=['GET'])
+@app.route('/api/v1/trump/<string:umsg>', methods=['GET'])
 def build_message(umsg):
     utokens = parse_user_input(umsg)
     raw_text = markov_chain.generate(utokens)
-    res_text = MarkovChain.englishify(raw_text, 25)
+    res_text = MarkovChain.englishify(raw_text, 20)
     return res_text
+
+
+# Frontend Server
+# ~~~~~~~~~~~~~~~
+#
+# Fronted API.
+#
+# Usually it is not a good idea to combine REST API and frontend server
+# in one process, however due to minimalism of both it will work good enough.
+#
+# Pavel Bazin 2018
+
+from flask import render_template
+
+
+@app.route('/', methods=['GET'])
+def main():
+    return render_template('main.html', name='Vyasa')
 
 
 if __name__ == '__main__':
