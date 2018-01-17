@@ -1,15 +1,15 @@
 import logging
 import random
 import pprint
-import json
 import sys
 import re
 
 
+from utils import stop_words, punctuation, finals
+
 class MarkovChain:
     def __init__(self, fname):
         logging.basicConfig(stream=sys.stdout, level=logging.CRITICAL)
-        self.punctuation = ['.', ',', '!', '?', ';']
         self.trigram_chain = {}
         self.twogram_chain = {}
         self.onegram_chain = {}
@@ -105,23 +105,66 @@ class MarkovChain:
         with open(fname, 'w') as f:
             f.write(data)
     
-    def generate(self, wcount):
-        condition = lambda ngram : ngram[0] not in self.punctuation
+    def generate(self, tokens=None, wcount=100):
+        condition = lambda ngram : ngram[0] not in punctuation
         choose = lambda ngram_set: random.choice(ngram_set)
 
         # Pick a thrigram to start a generation, shouldn't start with
         # punctuation.
-        trigram = ''
-        twogram = ''
-        onegram = ''
+        trigram = ('', '', '')
+        twogram = ('', '')
+        onegram = ('', )
 
-        while trigram == '':
-            x = choose(list(self.trigram_chain.keys()))
-            if condition(x):
-                trigram = x
+        logging.debug('tokens: ' + str(tokens))
+
+        if tokens != None:
+            if len(tokens) == 3:
+                if tokens in self.trigram_chain:
+                    trigram = tokens
+                else:
+                    # Fallback to 2-gram
+                    logging.debug('falling back to 2-gram')
+                    tokens = (tokens[-2], tokens[-1])
+
+            if len(tokens) == 2:
+                if tokens in self.twogram_chain:
+                    trigram = ('', tokens[-2], tokens[-1])
+                    twogram = tokens
+                else:
+                    # Fallback to 1-gram
+                    logging.debug('falling back to 1-gram')
+                    tokens = (tokens[-1],)
+            
+            if len(tokens) == 1:
+                if tokens[0] in self.onegram_chain:
+                    twogram = ('', tokens[-1])
+                    onegram = (tokens[-1],)
+                else:
+                    # Fallback to random 3-gram
+                    logging.debug('param is none')
+                    tokens = None
+
+        # Parametrized input inactive, pick a random trigram
+        if tokens == None:
+            logging.debug('generating random trigram')
+            done = False
+            while not done:
+                x = choose(list(self.trigram_chain.keys()))
+                if condition(x):
+                    trigram = x
+                    done = True
         
+        logging.debug('trigram: ' + str(trigram))
+        logging.debug('twogram: ' + str(twogram))
+        logging.debug('onegram: ' + str(onegram))
+
         sentence = []
-        [sentence.append(gram) for gram in trigram]
+        if trigram != ('', '', ''):
+            [sentence.append(gram) for gram in trigram if gram != '']
+        elif twogram != ('', ''):
+            [sentence.append(gram) for gram in twogram if gram != '']
+        elif onegram != (''):
+            [sentence.append(gram) for gram in onegram if gram != '']
 
         logging.debug('initial sentence is: ' + str(sentence))
 
@@ -133,11 +176,12 @@ class MarkovChain:
                 word = random.choice(self.trigram_chain[trigram])
                 trigram = (trigram[1], trigram[2], word)
                 sentence.append(word)
+                logging.debug('trigram build: ' + str(trigram))
                 continue
-            else:
+            elif trigram != ('', '', ''):
                 # If not - construct a twogram and continue
                 twogram = (trigram[1], trigram[2])
-            
+                
             logging.debug('fallback to 2-gram')
 
             if twogram in self.twogram_chain:
@@ -145,8 +189,9 @@ class MarkovChain:
                 twogram = (twogram[1], word)
                 sentence.append(word)
                 trigram = (trigram[1], twogram[0], twogram[1])
+                logging.debug('twogram build: ' + str(twogram))
                 continue
-            else:
+            elif twogram != ('', ''):
                 onegram = (twogram[1])
 
             logging.debug('fallback to 1-gram')
@@ -156,6 +201,7 @@ class MarkovChain:
                 onegram = (word)
                 sentence.append(word)
                 twogram = (twogram[1], onegram[0])
+                logging.debug('onegram build: ' + str(onegram))
                 continue
             else:
                 logging.critical('fallback failure')
@@ -167,9 +213,6 @@ class MarkovChain:
 
     @staticmethod
     def englishify(sequence, length):
-        punctuation = ['.', ',', '!', '?', ';']
-        finals = ['.', '!', '?', ';']
-
         def to_sentence(sequence):
             prev_word = sequence[0]
             result = []
@@ -207,9 +250,46 @@ class MarkovChain:
         
         return ' '.join(cut(to_sentence(capitalize(sequence)), length))
 
+def parse_user_input(uinput):
+    remove_stopwords = lambda x: x not in stop_words
+    remove_punctuation = lambda x: x not in punctuation
+    decapitalize = lambda x: x.lower()
+    split = lambda text: re.findall(r"[\w+#']+|[.,!?;]", text)
+
+    ulist = []
+    if type(uinput) == type(''):
+        ulist = split(uinput)
+    else:
+        ulist = uinput
+
+    ulist = list(filter(remove_stopwords, filter(remove_punctuation, map(decapitalize, ulist))))
+
+    logging.debug('user tokens are: ' + str(ulist))
+
+    if len(ulist) >= 3:
+        return (ulist[-3], ulist[-2], ulist[-1])
+    elif len(ulist) >= 2:
+        return (ulist[-2], ulist[-1])
+    elif len(ulist) >= 1:
+        return (ulist[0],)
+    else:
+        logging.critical('parsing error, ulist is empty')
+        return ('fake', 'news')
+
+
+def chat(mc):
+    while True:
+        uinput = input('User: ')
+        tokens = parse_user_input(uinput)
+        raw_text = mc.generate(tokens)
+        engl_like = MarkovChain.englishify(raw_text, 25)
+        print('Trump: ' + engl_like)
+        print()
+
 if __name__ == '__main__':    
     mc = MarkovChain('data_1515521742.csv')
 
-    for i in range(20):
-        print(MarkovChain.englishify(mc.generate(50), 25))
-        print()
+    # print(MarkovChain.englishify(mc.generate(('income', 'tax')), 25))
+
+    chat(mc)
+    # mc.write_chain('chain')
