@@ -1,22 +1,21 @@
 # Production script for AWS Lambda.
 #
-# Consider this code as automatically generated and not for humans.
-#
 # Pavel Bazin 2018
 
 import boto3
+
 import random
 import pprint
+import json
 import sys
 import re
 
 # Initialize access to S3 resource
 s3 = boto3.resource('s3')
 bucket_name = 'trumpket'
-file_name = 'data_sample.csv'
+file_name = 'data.csv'
 data_object = s3.Object(bucket_name, file_name)
 data = data_object.get()['Body'].read()
-print(data)
 
 stop_words = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
 punctuation = ['.', ',', '!', '?', ';']
@@ -233,8 +232,11 @@ def parse_user_input(uinput):
         ulist = split(uinput)
     else:
         ulist = uinput
-
-    ulist = list(filter(remove_stopwords, filter(remove_punctuation, map(decapitalize, ulist))))
+    
+    if len(ulist) > 2:
+        ulist = list(filter(remove_stopwords, filter(remove_punctuation, map(decapitalize, ulist))))
+    else:
+        ulist = list(filter(remove_punctuation, map(decapitalize, ulist)))
 
     if len(ulist) >= 3:
         return (ulist[-3], ulist[-2], ulist[-1])
@@ -244,6 +246,7 @@ def parse_user_input(uinput):
         return (ulist[0],)
     else:
         return ('fake', 'news')
+
 
 def chat(mc):
     while True:
@@ -257,8 +260,10 @@ def chat(mc):
 markov_chain = MarkovChain(data)
 
 def lambda_handler(event, context):
-    utokens = parse_user_input('fake news are the best')
+    # if tokens not in chain answer I dont talk about x
+    uinput = event['message']
+    utokens = parse_user_input(uinput)
     raw_text = markov_chain.generate(utokens)
     res_text = MarkovChain.englishify(raw_text, 20)
-    print('done')
-    return res_text
+    
+    return { 'utokens': utokens, 'result': res_text, 'len': len(markov_chain.words) }
