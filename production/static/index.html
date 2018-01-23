@@ -3,6 +3,28 @@
 <head>
     <title>Chat with Mr. President</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-108148031-1"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-108148031-1');
+    </script>
+
+    <style>
+    @import url('https://rsms.me/inter/inter-ui.css');
+
+    body {
+        background: url(http://www.pavelbazin.com/projects/unreal-donald-trump/img/bg.jpg) no-repeat center center fixed;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+        font-family: 'Inter UI', 'Lato', sans-serif;
+    }
+    </style>
 </head>
 
 <body>
@@ -19,115 +41,169 @@
                     Send
                 </button>
             </div>
+
+            <div class="description" style="text-align: left; margin-top: 80px;">
+                <h1>How to Start</h1>
+                <p>Start by asking a question. Perhaps a good starting point is to ask <i>"Make America what again?"</i>.</p>
+
+                <h1>Description</h1>
+                <p><a href="http://pavelbazin.com/projects/unreal-donald-trump/">@unrealDonaldTrump</a>
+                is nothing but an algorithm trained on lastest thousands of tweets of <a href="https://twitter.com/realDonaldTrump">@realDonalTrump</a>
+                which is, as we all know, a personal twitter of 45th president of the United States of America.</p>
+
+                <p>Each human being has a unique speech identity. This identity is known by the following features:</p>
+
+                <ol class="ui list">
+                    <li>Lexical</li>
+                    <li>Grammar</li>
+                    <li>Style</li>
+                    <li>Topographical</li>
+                </ol>
+
+                <p>The current algorithm is capable of reproducing the first three items from the list above. Basically,
+                these items from the list is a foundation of written speech analysis in criminalistics. How can you
+                prove that this message was or was not sent by a suspect?</p>
+
+                <h1>Why Donald Trump</h1>
+                <p>Donal Trump is indeed a bright person for this kind of idea. He is a well-known figure,
+                a big part of his fame came from, sometimes ridiculous, tweets. 
+                <a href="http://pavelbazin.com/projects/unreal-donald-trump/">@unrealDonaldTrump</a> 
+                exposes great scientific interest for speech analysis and processing. Therefore, the main motivation
+                for choosing this particular twitter account is purely scientific.</p>
+
+                <h1>Disclaimer</h1>
+                <p>The algorithm may generate offensive, discriminatory, racist and other inappropriate sentences.
+                Keep in mind that this algorithm is a random process. It takes parts of tweets and combines
+                them in the best possible way. While this way may look great for a machine it may be really
+                unpleasant for a human. That said developer has no responsibility for produced content.</p>
+
+                <h1>Technical Details</h1>
+                <p>Generation algorithm is based on Markov process. Chain for the process assembled in 3 passes:
+                3-gram, 2-gram, 1-gram. Therefore "Very, very nasty weather" will yield data structures such as
+                (very, very, nasty) -> weather for 3-grams, (very, very) -> nasty for 2-grams, (very) -> very for 1-gram.
+                Next, generation process starts from user-defined ngrams, and if this ngram is in the chain the generation
+                process begins. When it is happens that particular ngram is missing from the chain algorithm
+                performs fallback to (n - 1)-gram until n is not 1.</p>
+
+                <h1>Source Code</h1>
+                <p><a href="https://github.com/pvlbzn/talk-to-president">talk-to-president</a> on GitHub from
+                <a href="http://pavelbazin.com/">Pavel Bazin</a>.</p>
+
+            </div>
         </div>
     </div>
-
-    <script>
-        const userPics = [
-            'elliot.jpg',
-            'elyse.png',
-            'helen.jpg',
-            'jenny.jpg',
-            'kristy.png',
-            'matthew.png',
-            'molly.png',
-            'steve.jpg',
-            'stevie.jpg',
-        ]
-
-        const userPic = userPics[Math.floor(Math.random() * 100) % userPics.length]
-
-        function createMessage(user, msg) {
-            // Create element nodes
-            const message = document.createElement('div')
-            const avatar = document.createElement('a')
-            const image = document.createElement('img')
-            const content = document.createElement('div')
-            const author = document.createElement('a')
-            const text = document.createElement('div')
-
-            // Build them into a DOM tree
-            message.appendChild(avatar)
-            message.appendChild(content)
-            avatar.appendChild(image)
-            content.appendChild(author)
-            content.appendChild(text)
-
-            // Styles
-            if (user) {
-                message.style.textAlign = 'right'
-                avatar.style.cssFloat = 'right'
-                content.style.marginRight = '3.5em'
-            }
-
-            message.style.marginTop = '1em'
-
-            // Setup each element
-            message.className += 'comment'
-            avatar.className += 'avatar'
-            image.src = user ? '/projects/unreal-donald-trump/img/' + userPic : '/projects/unreal-donald-trump/img/trump.jpg'
-            content.className += 'content'
-            author.className += 'author'
-            author.innerHTML = user ? '@you' : '@unrealDonaldTrump'
-            text.className += 'text'
-            text.innerHTML = msg
-
-            return message
-        }
-
-        function createUserMessage(text) {
-            return createMessage(true, text)
-        }
-
-        function createAgentMessage(text) {
-            return createMessage(false, text)
-        }
-
-        function addMessage(user, text) {
-            const container = document.getElementById('chat-container')
-            let message = user ? createUserMessage(text) : createAgentMessage(text)
-            container.appendChild(message)
-            container.lastChild.scrollIntoView(false)
-        }
-
-        function addUserMessage(msg, delay) {
-            window.setTimeout(() => { addMessage(true, msg) }, delay)
-        }
-
-        function addAgentMessage(res, delay) {
-            const jres = JSON.parse(res)
-            const message = jres.result
-            window.setTimeout(() => { addMessage(false, message) }, delay)
-        }
-
-        function get(url, cb, message, delay) {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', url + message, true)
-            xhr.onload = function () {
-                if (xhr.status === 200)
-                    cb(xhr.responseText, delay)
-                else
-                    console.log('request failure: ' + xhr.status)
-            }
-            xhr.send()
-        }
-
-        function sendUserMessage() {
-            const input = document.getElementById('user-input')
-            const message = input.value
-            const comaSeparatedMessage = message.split(' ').join(',')
-            addUserMessage(message, 500)
-            get('https://ahldts8gld.execute-api.eu-west-2.amazonaws.com/prod/api/v1/message/', addAgentMessage, comaSeparatedMessage, 1800)
-        }
-
-        function init() {
-            window.setTimeout(function () { addAgentMessage('{"result": "What?"}') }, 1500)
-            const button = document.getElementById('send-button')
-            button.addEventListener('click', sendUserMessage)
-        }
-
-        document.onload = init()
-
-    </script>
-
 </body>
+
+<script>
+    const userPics = [
+        'elliot.jpg',
+        'elyse.png',
+        'helen.jpg',
+        'jenny.jpg',
+        'kristy.png',
+        'matthew.png',
+        'molly.png',
+        'steve.jpg',
+        'stevie.jpg',
+    ]
+
+    const userPic = userPics[Math.floor(Math.random() * 100) % userPics.length]
+
+    function createMessage(user, msg) {
+        // Create element nodes
+        const message = document.createElement('div')
+        const avatar = document.createElement('a')
+        const image = document.createElement('img')
+        const content = document.createElement('div')
+        const author = document.createElement('a')
+        const text = document.createElement('div')
+
+        // Build them into a DOM tree
+        message.appendChild(avatar)
+        message.appendChild(content)
+        avatar.appendChild(image)
+        content.appendChild(author)
+        content.appendChild(text)
+
+        // Styles
+        if (user) {
+            message.style.textAlign = 'right'
+            avatar.style.cssFloat = 'right'
+            content.style.marginRight = '3.5em'
+        }
+
+        message.style.marginTop = '1em'
+
+        // Setup each element
+        message.className += 'comment'
+        avatar.className += 'avatar'
+        image.src = user ? '/projects/unreal-donald-trump/img/' + userPic : '/projects/unreal-donald-trump/img/trump.jpg'
+        content.className += 'content'
+        author.className += 'author'
+        author.innerHTML = user ? '@you' : '@unrealDonaldTrump'
+        text.className += 'text'
+        text.innerHTML = msg
+
+        return message
+    }
+
+    function createUserMessage(text) {
+        return createMessage(true, text)
+    }
+
+    function createAgentMessage(text) {
+        return createMessage(false, text)
+    }
+
+    function addMessage(user, text) {
+        const container = document.getElementById('chat-container')
+        let message = user ? createUserMessage(text) : createAgentMessage(text)
+        container.appendChild(message)
+        container.lastChild.scrollIntoView(false)
+    }
+
+    function addUserMessage(msg, delay) {
+        window.setTimeout(() => { addMessage(true, msg) }, delay)
+    }
+
+    function addAgentMessage(res, delay) {
+        const jres = JSON.parse(res)
+        const message = jres.result
+        window.setTimeout(() => { addMessage(false, message) }, delay)
+    }
+
+    function get(url, cb, message, delay) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url + message, true)
+        xhr.onload = function () {
+            if (xhr.status === 200)
+                cb(xhr.responseText, delay)
+            else
+                console.log('request failure: ' + xhr.status)
+        }
+        xhr.send()
+    }
+
+    function sendUserMessage() {
+        const input = document.getElementById('user-input')
+        const message = input.value
+        const comaSeparatedMessage = message.split(' ').join(',')
+
+        input.value = ""
+        addUserMessage(message, 500)
+        get('https://ahldts8gld.execute-api.eu-west-2.amazonaws.com/prod/api/v1/message/', addAgentMessage, comaSeparatedMessage, 1800)
+    }
+
+    function init() {
+        window.setTimeout(function () { addAgentMessage('{"result": "What?"}') }, 1500)
+        
+        const button = document.getElementById('send-button')
+        const input = document.getElementById('user-input')
+
+        button.addEventListener('click', sendUserMessage)
+        input.addEventListener('keydown', function(event) { if (event.keyCode == 13) sendUserMessage() })
+    }
+
+    document.onload = init()
+
+</script>
