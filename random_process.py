@@ -38,6 +38,30 @@ class MarkovChain:
         # the rest will be ignored.
         return re.findall(r"[\w+#']+|[.,!?;]", url_free_text.lower())
 
+    def is_ngram(self, ngram):
+        """Check wheather given ngram in chain or not."""
+        if len(ngram) == 3 and ngram in self.trigram_chain:
+            return True
+        elif len(ngram) == 2 and ngram in self.twogram_chain:
+            return True
+        # ngram[0] because we have to 'unpack' word from the tuple here
+        elif len(ngram) == 1 and ngram[0] in self.onegram_chain:
+            return True
+        else:
+            return False
+    
+    def find_tokens(self, utokens):
+        if self.is_ngram(utokens):
+            return utokens
+        else:
+            if len(utokens) == 3:
+                return self.find_tokens((utokens[1], utokens[2]))
+            elif len(utokens) == 2:
+                return self.find_tokens((utokens[1], ))
+            elif len(utokens) == 1:
+                return None
+        return None
+
     def build_chain(self, sequence):
         # Todo: refactor ngram generators
         def mc_trigrams():
@@ -261,10 +285,11 @@ def parse_user_input(uinput):
         ulist = split(uinput)
     else:
         ulist = uinput
-
-    ulist = list(filter(remove_stopwords, filter(remove_punctuation, map(decapitalize, ulist))))
-
-    logging.debug('user tokens are: ' + str(ulist))
+    
+    if len(ulist) > 3:
+        ulist = list(filter(remove_stopwords, filter(remove_punctuation, map(decapitalize, ulist))))
+    else:
+        ulist = list(filter(remove_punctuation, map(decapitalize, ulist)))
 
     if len(ulist) >= 3:
         return (ulist[-3], ulist[-2], ulist[-1])
@@ -273,8 +298,7 @@ def parse_user_input(uinput):
     elif len(ulist) >= 1:
         return (ulist[0],)
     else:
-        logging.critical('parsing error, ulist is empty')
-        return ('fake', 'news')
+        return ('',)
 
 
 def chat(mc):
@@ -287,9 +311,23 @@ def chat(mc):
         print()
 
 if __name__ == '__main__':    
-    mc = MarkovChain('data_1515521742.csv')
+    mc = MarkovChain('data/data.csv')
+    print(mc.is_ngram(('russia', )))
 
-    # print(MarkovChain.englishify(mc.generate(('income', 'tax')), 25))
+    utokens = parse_user_input('hillary')
+    print(utokens)
+    found_tokens = mc.find_tokens(utokens)
 
-    chat(mc)
-    # mc.write_chain('chain')
+    print(found_tokens)
+
+    if found_tokens != None and utokens != ('',):
+        raw_text = mc.generate(utokens)
+        res_text = MarkovChain.englishify(raw_text, 20)
+    else:
+        res_text = 'I do not talk about '
+        if utokens != ('',):
+            res_text += ' '.join(utokens) + '.'
+        else:
+            res_text += 'it.'
+
+    print(res_text)
