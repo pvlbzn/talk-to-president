@@ -98,6 +98,30 @@ class MarkovChain:
         with open(fname, 'w') as f:
             f.write(data)
     
+    def is_ngram(self, ngram):
+        """Check wheather given ngram in chain or not."""
+        if len(ngram) == 3 and ngram in self.trigram_chain:
+            return True
+        elif len(ngram) == 2 and ngram in self.twogram_chain:
+            return True
+        # ngram[0] because we have to 'unpack' word from the tuple here
+        elif len(ngram) == 1 and ngram[0] in self.onegram_chain:
+            return True
+        else:
+            return False
+    
+    def find_tokens(self, utokens):
+        if self.is_ngram(utokens):
+            return utokens
+        else:
+            if len(utokens) == 3:
+                return self.find_tokens((utokens[1], utokens[2]))
+            elif len(utokens) == 2:
+                return self.find_tokens((utokens[1], ))
+            elif len(utokens) == 1:
+                return None
+        return None
+    
     def generate(self, tokens=None, wcount=100):
         condition = lambda ngram : ngram[0] not in punctuation
         choose = lambda ngram_set: random.choice(ngram_set)
@@ -233,7 +257,7 @@ def parse_user_input(uinput):
     else:
         ulist = uinput
     
-    if len(ulist) > 2:
+    if len(ulist) > 3:
         ulist = list(filter(remove_stopwords, filter(remove_punctuation, map(decapitalize, ulist))))
     else:
         ulist = list(filter(remove_punctuation, map(decapitalize, ulist)))
@@ -245,7 +269,7 @@ def parse_user_input(uinput):
     elif len(ulist) >= 1:
         return (ulist[0],)
     else:
-        return ('fake', 'news')
+        return ('',)
 
 
 def chat(mc):
@@ -263,7 +287,17 @@ def lambda_handler(event, context):
     # if tokens not in chain answer I dont talk about x
     uinput = event['message']
     utokens = parse_user_input(uinput)
-    raw_text = markov_chain.generate(utokens)
-    res_text = MarkovChain.englishify(raw_text, 20)
+
+    found_tokens = markov_chain.find_tokens(utokens)
+
+    if found_tokens != None and utokens != ('',):
+        raw_text = markov_chain.generate(utokens)
+        res_text = MarkovChain.englishify(raw_text, 20)
+    else:
+        res_text = 'I do not talk about '
+        if utokens != ('',):
+            res_text += ' '.join(utokens) + '.'
+        else:
+            res_text += 'it.'
     
     return { 'utokens': utokens, 'result': res_text, 'len': len(markov_chain.words) }
