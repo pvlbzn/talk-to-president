@@ -1,6 +1,7 @@
 <!doctype html>
 
 <head>
+    <meta name="viewport" content="user-scalable = yes">
     <title>Chat with Mr. President</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
 
@@ -195,7 +196,7 @@
     }
 
     function init() {
-        window.setTimeout(function () { addAgentMessage('{"result": "What?"}') }, 1500)
+        window.setTimeout(function () { addAgentMessage('{"result": "What do you want to discuss?"}') }, 1500)
         
         const button = document.getElementById('send-button')
         const input = document.getElementById('user-input')
