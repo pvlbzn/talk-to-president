@@ -18,7 +18,6 @@
     @import url('https://rsms.me/inter/inter-ui.css');
 
     body {
-        background: url(http://www.pavelbazin.com/projects/unreal-donald-trump/img/bg.jpg) no-repeat center center fixed;
         -webkit-background-size: cover;
         -moz-background-size: cover;
         -o-background-size: cover;
@@ -138,7 +137,7 @@
         // Setup each element
         message.className += 'comment'
         avatar.className += 'avatar'
-        image.src = user ? '/projects/unreal-donald-trump/img/' + userPic : '/projects/unreal-donald-trump/img/trump.jpg'
+        image.src = user ? 'https://s3.eu-west-2.amazonaws.com/pavelbazin.com/projects/unreal-donald-trump/img/' + userPic : 'https://s3.eu-west-2.amazonaws.com/pavelbazin.com/projects/unreal-donald-trump/img/trump.jpg'
         content.className += 'content'
         author.className += 'author'
         author.innerHTML = user ? '@you' : '@unrealDonaldTrump'
